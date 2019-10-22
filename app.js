@@ -4,6 +4,8 @@ const express = require('express'),
 	bodyParser = require('body-parser'),
 	image = require('./models/images'),
 	dotEnv = require('dotenv'),
+	request = require('request'),
+	imageType = require('image-type'),
 	app = express();
 
 dotEnv.config({ path: './.env' });
@@ -29,7 +31,7 @@ app.post('/upload', upload.single('myFile'), (req, res) => {
 		img.data = req.file.buffer;
 		img.type = req.file.mimetype;
 		img.save();
-		res.send('Saved Successfully!');
+		res.redirect('/gallery');
 	}
 });
 
@@ -37,18 +39,33 @@ app.post('/upload', upload.single('myFile'), (req, res) => {
 
 app.get('/link', (req, res) => res.render('link'));
 
-app.post('/link', upload.single('myFile'), (req, res) => {
-	res.send(req.file);
+app.post('/link', (req, res) => {
+	let imgUrl = req.body.url;
+	let imgBuffer = request({ uri: imgUrl, encoding: null }, (err, res, buff) => {
+		if (err) res.send('err');
+		return buff;
+	});
+	// let imgType = imageType(imgBuffer).mime;
+	console.log(imgBuffer);
+	res.send(imgBuffer);
+});
+
+app.get('/hidden/:imgId', (req, res) => {
+	image.findById(req.params.imgId, (err, foundImage) => {
+		if (err) res.send(err);
+		res.contentType(foundImage.type);
+		res.send(foundImage.data);
+	});
 });
 
 app.get('/gallery', (req, res) => {
-	image.findOne({}, (err, foundImage) => {
+	image.find({}, (err, foundImage) => {
 		if (err) {
 			console.log(err);
 			res.send('Error occured');
 		}
-		let imgdata = new Buffer(foundImage.data).toString('base64');
-		res.render('showImage', { images: foundImage, img: imgdata });
+		console.log('Serving Image');
+		res.render('showImage', { images: foundImage });
 	});
 });
 

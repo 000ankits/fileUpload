@@ -8,9 +8,13 @@
 </head>
 <body>
     <h1>Gallery</h1>
-    <div>
-        <img src="<%= images._id %>" alt="">
-    </div>
+    <% images.forEach((image)=>{ %>
+        <span>
+            <img src="/hidden/<%= image._id %>"" alt="IMAGE" style="max-height: 400px; max-width: 400px;">
+        </span>
+    <% }) %>
+    <hr>
+    <a href="javascript:history.back()">Back</a>
     
 </body>
 </html>
